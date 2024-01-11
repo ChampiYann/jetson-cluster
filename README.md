@@ -55,9 +55,12 @@ Geef de pi een vast IP adres op de ethernet poort. Doe dit door `/etc/dhcpcd.con
 interface eth0
 static ip_address=<ip address>/24
 static routers=<router address>
+nogateway
 ```
 
 Kies voor `<ip address>` het eerste ip adres uit de range (dus bijvoorbeeld `10.0.0.1`) en zet bij bij `<router address>` het 'nul-adres' van die range (dus bijvoorbeeld `10.0.0.0` als je `<ip address>` `10.0.0.1` is).
+
+`nogateway` zorgt er voor dat er voor die interface geen dafault gateway wordt aangemaakt, wat ook nodig is omdat je wil dat al het verkeer wat geen lokale bestemming heeft (aka, the jetsons), het internet op gaat en niet het lokale netwerk in.
 
 Welk IP adres je hier moet kiezen kan ook afhangen van de configuratie van de switch.
 
@@ -83,16 +86,21 @@ sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.original
 
 Open `/etc/dnsmasq.conf` in een editor. In de configuratie file verwijder de `#` voor de volgende regels en pas ze aan als nodig:
 
-<!-- TODO: check config -->
 ```conf
 interface=eth0
 listen-address=<ip address>
-bind-interfaces
-server=8.8.8.8
 domain-needed
 bogus-priv
-dhcp-range=192.168.220.50,192.168.220.150,12h
+dhcp-range=<start ip>,<eind ip>,12h
 ```
+
+Met `interface` geen je aan op welk interface de pi DNS en DHCP moet aanbieden.
+
+Met `listen-address` geef je het IP adres aan waarop de pi moet luister voor DNS en DHCP verzoeken. Dit moet het zelfde IP adres zijn als het gene dat je eerder als `static ip_address` hebt aangegeven, zonder de `/24`.
+
+`domain-needed` en `bogus-priv` zorgen ervoor dat je geen DNS verzoeken het internet op stuurt als het duidelijk is dat ze daar niet voor bedoeld zijn.
+
+Vul bij `dhcp-range` het IP bereik in dat de jetsons mogen gebruiken. Voorbeeld: `10.0.0.50,10.0.0.150`.
 
 #### IP forwarding configuratie
 
